@@ -16,7 +16,7 @@ jobs:
           DPSS_RETRIEVE: |
             [
               {"secretId":"75","secretKey":"access-key","outputVariable":"AWS-ACCESS-KEY"}
-            }
+            ]
         run: |
           docker run --rm \
             -e DPSS_SERVER_URL="${{ secrets.DPSS_SERVER_URL }}" \
