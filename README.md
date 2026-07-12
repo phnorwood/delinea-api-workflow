@@ -102,5 +102,5 @@ cd terraform && terraform destroy
   `aws_secret_key_slug` don't match the secret's template. Inspect the real slugs
   with the `curl … | jq '.items[].slug'` command above.
 
-## GitHub Actions (Options)
+## GitHub Actions (Optional)
 - **[GitHub Actions](https://docs.delinea.com/online-help/integrations/github/github-overview.htm)** has been configured within this project as an additional method for programmatic secret retrieval.
