@@ -23,6 +23,7 @@ jobs:
             -e DPSS_CLIENT_ID="${{ secrets.DPSS_CLIENT_ID }}" \
             -e DPSS_CLIENT_SECRET="${{ secrets.DPSS_CLIENT_SECRET }}" \
             -e DPSS_RETRIEVE="$DPSS_RETRIEVE" \
+            -e DELINEA_RETRIEVE="$DPSS_RETRIEVE" \
             -e GITHUB_ENV=/github_env \
             -v "$GITHUB_ENV:/github_env" \
             delineaxpm/dpss-github-action:latest
