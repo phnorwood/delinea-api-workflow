@@ -1,5 +1,5 @@
-name: Build with Delinea secrets
-
+name: Delinea Secret via GitHub Actions
+run-name: ${{ github.actor }} is requesting secret from Delinea 🚀
 on:
   push:
     branches: [main]
