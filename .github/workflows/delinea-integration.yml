@@ -29,8 +29,7 @@ jobs:
 
       - name: Mask retrieved secrets in logs
         run: |
-          echo "::add-mask::$SECRET_API_KEY"
-          echo "::add-mask::$DB_PASSWORD"
+          echo "::add-mask::$AWS-ACCESS-KEY"
 
       - name: Use the retrieved secrets
         run: |
