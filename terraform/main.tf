@@ -1,5 +1,6 @@
 terraform {
-  required_version = ">= 1.5"
+  # Ephemeral resources require Terraform >= 1.10.
+  required_version = ">= 1.10"
 
   required_providers {
     aws = {
@@ -14,14 +15,36 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.0"
     }
+    tss = {
+      source  = "DelineaXPM/tss"
+      version = "~> 3.0"
+    }
   }
 }
 
-# Credentials supplied as code parameters (see variables.tf / terraform.tfvars).
+# Delinea Secret Server. Auth via an out-of-band bearer token (TF_VAR_tss_token).
+provider "tss" {
+  server_url = var.tss_server_url
+  token      = var.tss_token
+}
+
+# Pull the AWS credentials straight from Secret Server at apply time.
+# Ephemeral: values are used in-memory only and never written to state or disk.
+ephemeral "tss_secret" "aws_access_key" {
+  id    = var.tss_secret_id
+  field = var.aws_access_key_slug
+}
+
+ephemeral "tss_secret" "aws_secret_key" {
+  id    = var.tss_secret_id
+  field = var.aws_secret_key_slug
+}
+
+# Credentials injected from Secret Server rather than terraform.tfvars.
 provider "aws" {
   region     = var.aws_region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  access_key = ephemeral.tss_secret.aws_access_key.value
+  secret_key = ephemeral.tss_secret.aws_secret_key.value
 }
 
 # Smallest footprint: use the default VPC/subnet rather than creating a network.

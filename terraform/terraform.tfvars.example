@@ -1,7 +1,21 @@
 # Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
-aws_access_key = "AKIAxxxxxxxxxxxxxxxx"
-aws_secret_key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-aws_region     = "us-east-1"
+#
+# AWS credentials are NOT stored here — they are pulled from Delinea Secret
+# Server at apply time via the tss provider (see main.tf).
+
+# Secret Server connection + the secret that holds the AWS keys:
+tss_server_url = "https://your.secretserver.host/SecretServer"
+tss_secret_id  = 1234
+
+aws_region = "us-east-1"
+
+# Auth is supplied via environment, NOT this file:
+#   export TF_VAR_tss_token="<out-of-band bearer token>"
+
+# Field slugs default to access-key / secret-key. Override only if your
+# secret template uses different slugs (e.g. username / password):
+# aws_access_key_slug = "access-key"
+# aws_secret_key_slug = "secret-key"
 
 # Optional overrides:
 # instance_type    = "t3.micro"
