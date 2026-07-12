@@ -13,7 +13,7 @@ jobs:
 
       - name: Retrieve secrets from Delinea
         env:
-          DELINEA_RETRIEVE: |
+          DPSS_RETRIEVE: |
             [
               {"secretId":"75","secretKey":"access-key","outputVariable":"AWS-ACCESS-KEY"}
             }
