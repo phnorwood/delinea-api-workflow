@@ -1,6 +1,6 @@
 # --- Delinea Secret Server -------------------------------------------------
 # AWS credentials are fetched from Secret Server at apply time (see main.tf).
-# Set the auth values via environment: TF_VAR_tss_username, TF_VAR_tss_password.
+# Set the auth token via environment: TF_VAR_tss_token.
 
 variable "tss_server_url" {
   description = "Secret Server base URL, e.g. https://host/SecretServer."
