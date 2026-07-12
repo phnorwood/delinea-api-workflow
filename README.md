@@ -101,3 +101,6 @@ cd terraform && terraform destroy
 - **Empty value or fetch error on a field.** The `aws_access_key_slug` /
   `aws_secret_key_slug` don't match the secret's template. Inspect the real slugs
   with the `curl … | jq '.items[].slug'` command above.
+
+## GitHub Actions (Options)
+- **[GitHub Actions](https://docs.delinea.com/online-help/integrations/github/github-overview.htm)`.** has been configured within this project as an additional method for programmatic secret retrieval.
