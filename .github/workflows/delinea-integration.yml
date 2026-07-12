@@ -15,9 +15,8 @@ jobs:
         env:
           DPSS_RETRIEVE: |
             [
-              {"secretId":"1025","secretKey":"api_key","outputVariable":"SECRET_API_KEY"},
-              {"secretPath":"ci:database:prod","secretKey":"password","outputVariable":"DB_PASSWORD"}
-            ]
+              {"secretId":"75","secretKey":"access-key","outputVariable":"AWS-ACCESS-KEY"}
+            }
         run: |
           docker run --rm \
             -e DPSS_SERVER_URL="${{ secrets.DPSS_SERVER_URL }}" \
@@ -35,5 +34,4 @@ jobs:
 
       - name: Use the retrieved secrets
         run: |
-          # SECRET_API_KEY and DB_PASSWORD are now in the environment.
-          curl -fsS -H "Authorization: Bearer $SECRET_API_KEY" https://api.example.com/health
+          echo "AWS Access Key: $AWS-ACCESS-KEY"
