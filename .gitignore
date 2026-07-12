@@ -1,0 +1,12 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+terraform/terraform.tfvars
+
+# Secrets / generated keys
+*.pem
+
+# Ansible generated inventory
+ansible/inventory.ini
