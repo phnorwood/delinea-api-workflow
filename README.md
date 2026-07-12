@@ -103,4 +103,4 @@ cd terraform && terraform destroy
   with the `curl … | jq '.items[].slug'` command above.
 
 ## GitHub Actions (Options)
-- **[GitHub Actions](https://docs.delinea.com/online-help/integrations/github/github-overview.htm)`.** has been configured within this project as an additional method for programmatic secret retrieval.
+- **[GitHub Actions](https://docs.delinea.com/online-help/integrations/github/github-overview.htm)** has been configured within this project as an additional method for programmatic secret retrieval.
