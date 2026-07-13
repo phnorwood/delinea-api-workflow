@@ -11,17 +11,63 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Preflight - verify secrets are present (no values printed)
+        env:
+          DPSS_SERVER_URL: ${{ secrets.DPSS_SERVER_URL }}
+          DPSS_CLIENT_ID: ${{ secrets.DPSS_CLIENT_ID }}
+          DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
+        run: |
+          echo "DPSS_SERVER_URL length:    ${#DPSS_SERVER_URL}"
+          echo "DPSS_CLIENT_ID length:     ${#DPSS_CLIENT_ID}"
+          echo "DPSS_CLIENT_SECRET length: ${#DPSS_CLIENT_SECRET}"
+          # Length 0 means the secret is not set in this repo/environment scope.
+          if [ -z "$DPSS_SERVER_URL" ] || [ -z "$DPSS_CLIENT_ID" ] || [ -z "$DPSS_CLIENT_SECRET" ]; then
+            echo "::error::One or more DPSS secrets are empty in this scope."
+            exit 1
+          fi
+
+      - name: Preflight - reproduce token exchange directly (compare with container)
+        env:
+          DPSS_SERVER_URL: ${{ secrets.DPSS_SERVER_URL }}
+          DPSS_CLIENT_ID: ${{ secrets.DPSS_CLIENT_ID }}
+          DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
+        run: |
+          # --data-urlencode safely encodes special characters that shell
+          # interpolation would otherwise mangle. If THIS succeeds but the
+          # container step fails, the problem is how the value is passed to
+          # docker, not the credentials themselves.
+          http_code=$(curl -s -o /tmp/token.json -w "%{http_code}" -X POST \
+            "${DPSS_SERVER_URL%/}/oauth2/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=password" \
+            --data-urlencode "username=${DPSS_CLIENT_ID}" \
+            --data-urlencode "password=${DPSS_CLIENT_SECRET}")
+          echo "Token endpoint HTTP status: $http_code"
+          # Report whether a token came back WITHOUT printing its value.
+          if grep -q access_token /tmp/token.json; then
+            echo "access_token: PRESENT (auth OK)"
+          else
+            echo "access_token: MISSING - response body:"
+            cat /tmp/token.json
+          fi
+
       - name: Retrieve secrets from Delinea
         env:
+          DPSS_SERVER_URL: ${{ secrets.DPSS_SERVER_URL }}
+          DPSS_CLIENT_ID: ${{ secrets.DPSS_CLIENT_ID }}
+          DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
           DPSS_RETRIEVE: |
             [
               {"secretId":"75","secretKey":"access-key","outputVariable":"AWS_ACCESS_KEY"}
             ]
         run: |
+          # Pass secrets via -e VAR (no "=value") so their values come from the
+          # step environment and are NEVER rendered into the shell command string.
+          # This eliminates truncation/mangling from special characters.
           docker run --rm \
-            -e DPSS_SERVER_URL="${{ secrets.DPSS_SERVER_URL }}" \
-            -e DPSS_CLIENT_ID="${{ secrets.DPSS_CLIENT_ID }}" \
-            -e DPSS_CLIENT_SECRET="${{ secrets.DPSS_CLIENT_SECRET }}" \
+            -e DPSS_SERVER_URL \
+            -e DPSS_CLIENT_ID \
+            -e DPSS_CLIENT_SECRET \
             -e DELINEA_RETRIEVE="$DPSS_RETRIEVE" \
             -e GITHUB_ENV=/github_env \
             -v "$GITHUB_ENV:/github_env" \
