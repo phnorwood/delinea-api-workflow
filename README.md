@@ -95,7 +95,7 @@ cd terraform && terraform destroy
 
 ---
 
-## Use-case 2 — GitHub Actions
+## Use-Case #2 via GitHub Actions
 
 A CI pipeline that retrieves secrets during a workflow run, demonstrating the
 [Delinea GitHub integration](https://docs.delinea.com/online-help/integrations/github/github-overview.htm).
@@ -140,7 +140,7 @@ final step consumes them.
 
 ---
 
-## Use-case 3 — aws-validate.sh
+## Use-Case #3 via API
 
 A self-contained BASH script that calls the Secret Server REST API directly,
 extracts the AWS credentials, configures the AWS CLI, and validates them with
