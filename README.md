@@ -1,14 +1,11 @@
 # delinea-api-workflow
 
 A demonstration of retrieving secrets from **Delinea Secret Server** at runtime,
-shown three different ways. Everything else in this repo — Terraform, Ansible,
-NGINX, the AWS CLI — is supporting scaffolding that exists only to give the
-secret retrieval something real to do (provision AWS using credentials that are
-never written to disk or source control).
+shown three different ways. Everything else in this repo is supporting scaffolding that exists only to give the secret retrieval something real to do e.g. provision AWS EC2 instances using credentials that are never written to disk or source control.
 
-The subject of the project is the **secret retrieval**, not the deployment.
+The subject of the project is **secret retrieval**, not deployment.
 
-## The three use-cases
+## Demo Use Cases
 
 | # | Method | How it authenticates to Secret Server | Where secrets are used |
 |---|---|---|---|
@@ -22,7 +19,7 @@ key. Retrieval happens at runtime; nothing sensitive is committed to the repo.
 
 ---
 
-## Use-case 1 — Terraform TSS provider
+## Use-Case #1 via Terraform Provider
 
 Terraform uses the [`DelineaXPM/tss`](https://registry.terraform.io/providers/DelineaXPM/tss/latest/docs)
 provider to read the AWS credentials from Secret Server at apply time via
@@ -78,8 +75,7 @@ terraform apply     # fetches AWS creds from Secret Server, then provisions
 
 `terraform.tfvars` and the generated `*.pem` key are gitignored.
 
-<details>
-<summary>Optional: finish the demo deploy and tear it down</summary>
+### Optional
 
 Terraform renders an Ansible inventory pointing at the new instance. To install
 NGINX and confirm the box is reachable:
@@ -89,24 +85,13 @@ cd ../ansible
 ansible-playbook -i inventory.ini playbook.yml
 ```
 
+### Destroy
+
 Tear everything down when finished:
 
 ```bash
 cd terraform && terraform destroy
 ```
-</details>
-
-### Troubleshooting
-
-- **`terraform-provider-tss plugin crashed` / nil pointer in `accessResource`.**
-  Almost always an unreachable or wrong `tss_server_url`. The tss SDK reads the
-  HTTP status before checking the transport error, so a failed request surfaces
-  as a crash rather than a clean message. Verify the host answers first:
-  `curl -sS "$TSS_SERVER_URL/api/v1/healthcheck"` (expect HTTP 200).
-- **`Secret Fetch Error … 401 Unauthorized`.** The bearer token is missing,
-  expired, or lacks View access. Refresh `TF_VAR_tss_token`.
-- **Empty value / fetch error on a field.** The slug variables don't match the
-  secret's template. Inspect the real slugs with the `curl … | jq` command above.
 
 ---
 
