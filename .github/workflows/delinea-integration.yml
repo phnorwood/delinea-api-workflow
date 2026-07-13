@@ -70,7 +70,7 @@ jobs:
           DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
           DPSS_RETRIEVE: |
             [
-              {"secretId":"75","access-key":"Access Key","outputVariable":"AWS_ACCESS_KEY"}
+              {"secretId":"75","secretKey":"access-key","outputVariable":"AWS_ACCESS_KEY"}
             ]
         run: |
           # Pass secrets via -e VAR (no "=value") so their values come from the
