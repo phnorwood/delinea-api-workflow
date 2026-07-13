@@ -58,6 +58,13 @@ jobs:
             | jq -r '.items[]? | "\(.fieldName)  ->  slug=\(.slug)"' \
             || echo "(could not list fields)"
 
+          # Raw field objects, in case the action matches on some other identifier
+          # (fieldName vs slug vs fieldId). Values are not printed.
+          echo "--- raw field identifiers on secret 75 ---"
+          curl -s -H "Authorization: Bearer $TOKEN" "$SS_URL/api/v1/secrets/75" \
+            | jq -r '[.items[]? | {fieldName, slug, fieldId, fieldDescription}]' \
+            || echo "(could not dump fields)"
+
       - name: Retrieve secrets from Delinea
         env:
           DPSS_SERVER_URL: ${{ secrets.DPSS_SERVER_URL }}
@@ -65,7 +72,7 @@ jobs:
           DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
           DPSS_RETRIEVE: |
             [
-              {"secretId":"75","secretKey":"access-key","outputVariable":"AWS_ACCESS_KEY"}
+              {"secretId":"75","secretKey":"Access Key","outputVariable":"AWS_ACCESS_KEY"}
             ]
         run: |
           # Pass secrets via -e VAR (no "=value") so their values come from the
