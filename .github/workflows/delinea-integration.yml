@@ -72,7 +72,7 @@ jobs:
           DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
           DPSS_RETRIEVE: |
             [
-              {"secretId":"75","secretKey":"Access Key","outputVariable":"AWS_ACCESS_KEY"}
+              {"secretId":"75","secretKey":"access-key","outputVariable":"AWS_ACCESS_KEY"}
             ]
         run: |
           # Pass secrets via -e VAR (no "=value") so their values come from the
@@ -86,6 +86,16 @@ jobs:
             -e GITHUB_ENV=/github_env \
             -v "$GITHUB_ENV:/github_env" \
             delineaxpm/dpss-github-action:latest
+
+      - name: Verify retrieval succeeded
+        run: |
+          # The action returns "success" even when secretKey matches no field
+          # (it just writes an empty value), so fail explicitly on empty.
+          if [ -z "$AWS_ACCESS_KEY" ]; then
+            echo "::error::AWS_ACCESS_KEY is empty — secretKey did not match any field name/slug on secret 75. Check the preflight 'fieldName -> slug' output and use the exact (case-sensitive) slug."
+            exit 1
+          fi
+          echo "AWS_ACCESS_KEY retrieved (length ${#AWS_ACCESS_KEY})"
 
       - name: Mask retrieved secrets in logs
         run: |
