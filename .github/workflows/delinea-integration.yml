@@ -15,7 +15,7 @@ jobs:
         env:
           DPSS_RETRIEVE: |
             [
-              {"secretId":"75","secretKey":"access-key","outputVariable":"AWS-ACCESS-KEY"}
+              {"secretId":"75","secretKey":"access-key","outputVariable":"AWS_ACCESS_KEY"}
             ]
         run: |
           docker run --rm \
@@ -29,8 +29,8 @@ jobs:
 
       - name: Mask retrieved secrets in logs
         run: |
-          echo "::add-mask::$AWS-ACCESS-KEY"
+          echo "::add-mask::$AWS_ACCESS_KEY"
 
       - name: Use the retrieved secrets
         run: |
-          echo "AWS Access Key: $AWS-ACCESS-KEY"
+          echo "AWS Access Key: $AWS_ACCESS_KEY"
