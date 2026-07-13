@@ -26,42 +26,37 @@ jobs:
             exit 1
           fi
 
-      - name: Preflight - reproduce token exchange directly (compare with container)
+      - name: Preflight - list secret field slugs (Delinea Platform flow)
         env:
           DPSS_SERVER_URL: ${{ secrets.DPSS_SERVER_URL }}
           DPSS_CLIENT_ID: ${{ secrets.DPSS_CLIENT_ID }}
           DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
         run: |
-          TOKEN_URL="${DPSS_SERVER_URL%/}/oauth2/token"
-          # Sanity-check the URL we actually stored (scheme + host only; no secrets).
-          echo "Calling host: $(echo "$TOKEN_URL" | sed -E 's#(https?://[^/]+).*#\1#')"
+          PLATFORM="${DPSS_SERVER_URL%/}"
+          # Secret Server API host for this tenant (platform host -> SS cloud host).
+          SS_URL="$(echo "$PLATFORM" | sed 's/\.delinea\.app/.secretservercloud.com/')"
+          echo "Platform host: $PLATFORM"
+          echo "Secret Server host: $SS_URL"
 
-          # Step 1: do NOT follow redirects, so we can read the Location header.
-          # A 3xx here means auth has moved (e.g. tenant onboarded to the Delinea
-          # Platform); the Location tells us the real endpoint to target.
-          echo "--- redirect probe (no follow) ---"
-          curl -s -o /dev/null -D /tmp/headers.txt -X POST "$TOKEN_URL" \
+          # 1. Platform client_credentials token (the flow the container uses).
+          TOKEN=$(curl -s -X POST "$PLATFORM/identity/api/oauth2/token/xpmplatform" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            --data-urlencode "grant_type=password" \
-            --data-urlencode "username=${DPSS_CLIENT_ID}" \
-            --data-urlencode "password=${DPSS_CLIENT_SECRET}" || true
-          grep -iE '^HTTP/|^location:' /tmp/headers.txt || echo "(no status/location headers captured)"
-
-          # Step 2: follow redirects and report the final result (what the
-          # container's Go HTTP client effectively does).
-          echo "--- following redirects ---"
-          http_code=$(curl -sL -o /tmp/token.json -w "%{http_code}" -X POST "$TOKEN_URL" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            --data-urlencode "grant_type=password" \
-            --data-urlencode "username=${DPSS_CLIENT_ID}" \
-            --data-urlencode "password=${DPSS_CLIENT_SECRET}")
-          echo "Final HTTP status after redirects: $http_code"
-          if grep -q access_token /tmp/token.json; then
-            echo "access_token: PRESENT (auth OK)"
-          else
-            echo "access_token: MISSING - response body:"
-            cat /tmp/token.json
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=${DPSS_CLIENT_ID}" \
+            --data-urlencode "client_secret=${DPSS_CLIENT_SECRET}" \
+            --data-urlencode "scope=xpmheadless" | jq -r '.access_token // empty')
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::Could not obtain platform token in preflight (does not block the run)."
+            exit 0
           fi
+          echo "Platform token: acquired"
+
+          # 2. Read secret 75 and print each field's name + slug so we know the
+          #    exact value to use for "secretKey".
+          echo "--- available fields on secret 75 (fieldName -> slug) ---"
+          curl -s -H "Authorization: Bearer $TOKEN" "$SS_URL/api/v1/secrets/75" \
+            | jq -r '.items[]? | "\(.fieldName)  ->  slug=\(.slug)"' \
+            || echo "(could not list fields)"
 
       - name: Retrieve secrets from Delinea
         env:
