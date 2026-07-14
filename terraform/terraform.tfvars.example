@@ -4,7 +4,9 @@
 # Server at apply time via the tss provider (see main.tf).
 
 # Secret Server connection + the secret that holds the AWS keys:
-tss_server_url = "https://your.secretserver.host/SecretServer"
+# Below SERVER_URL assumes CLOUD FORMAT e.g. Delinea Secret Server Cloud 
+# Refer to API manual for guidance on URL 
+tss_server_url = "https://CHANGEME.secretservercloud.com"
 tss_secret_id  = 1234
 
 aws_region = "us-east-1"
