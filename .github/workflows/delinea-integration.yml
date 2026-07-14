@@ -65,6 +65,15 @@ jobs:
             | jq -r '[.items[]? | {fieldName, slug, fieldId, fieldDescription}]' \
             || echo "(could not dump fields)"
 
+          # 3. CRITICAL: can this token actually READ the field VALUES?
+          #    Print only the LENGTH of each itemValue (never the value itself).
+          #    If lengths are 0, the value is being redacted -> permissions/
+          #    secret-config problem, which is exactly what the action hits.
+          echo "--- value readability on secret 75 (slug -> itemValue length) ---"
+          curl -s -H "Authorization: Bearer $TOKEN" "$SS_URL/api/v1/secrets/75" \
+            | jq -r '.items[]? | "\(.slug)  ->  valueLength=\((.itemValue // "") | length)"' \
+            || echo "(could not read values)"
+
       - name: Retrieve secrets from Delinea
         env:
           DPSS_SERVER_URL: ${{ secrets.DPSS_SERVER_URL }}
@@ -72,7 +81,7 @@ jobs:
           DPSS_CLIENT_SECRET: ${{ secrets.DPSS_CLIENT_SECRET }}
           DPSS_RETRIEVE: |
             [
-              {"secretId":"75","secretKey":"access-key","outputVariable":"AWS_ACCESS_KEY"}
+              {"secretId":"75","secretKey":"Access Key","outputVariable":"AWS_ACCESS_KEY"}
             ]
         run: |
           # Pass secrets via -e VAR (no "=value") so their values come from the
