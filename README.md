@@ -12,6 +12,7 @@ The subject of the project is **secret retrieval**, not deployment. **However**,
 | 1 | [Terraform TSS provider](#use-case-1-via-terraform-provider) | OAuth **bearer token** (`TF_VAR_tss_token`) | Provisioning AWS resources at `terraform apply` |
 | 2 | [GitHub Actions](#use-case-2-via-github-actions) | **Client credentials** (client ID + secret) | Inside a CI pipeline on push |
 | 3 | [aws-validate.sh](#use-case-3-via-api) | OAuth **bearer token** (`BEARER_TOKEN`) | A shell script calling the Secret Server API directly |
+| 4 | [Ansible tss lookup](#use-case-4-via-ansible-lookup) | Bearer **token** *or* **username/password** | A playbook resolving the secret at runtime via a lookup plugin |
 
 In every case the secret is a Secret Server secret whose template exposes two
 fields (slugs `access-key` and `secret-key`) holding an AWS access key and secret
@@ -180,11 +181,89 @@ export SECRET_ID="<id>"
 
 ---
 
+## Use-Case #4 via Ansible Lookup
+
+An Ansible playbook that resolves the AWS credentials from Secret Server at
+runtime using the [`community.general.tss`](https://docs.ansible.com/ansible/latest/collections/community/general/tss_lookup.html)
+lookup plugin, as described in the
+[Delinea Ansible integration docs](https://docs.delinea.com/online-help/integrations/redhat/ansible-secret-server/ansible-integration-ansible-config.htm).
+See [ansible/retrieve-secret.yml](ansible/retrieve-secret.yml).
+
+The lookup runs on the control node and returns the secret object; the playbook
+flattens its `items[]` into a `{slug: value}` dict, pulls the `access-key` and
+`secret-key` fields, and validates them with `aws sts get-caller-identity`. Every
+task touching a value uses `no_log: true`, so nothing sensitive is written to
+disk or the Ansible log.
+
+### Prerequisites
+
+Install the collection, and the SDK **into the interpreter Ansible runs under**:
+
+```bash
+ansible-galaxy collection install community.general
+
+# python-tss-sdk must be importable by Ansible's own Python, not necessarily
+# your system python3. Find Ansible's interpreter, then pip-install with it:
+ansible --version | grep 'python version'
+# e.g. a Homebrew install uses its bundled venv:
+/opt/homebrew/Cellar/ansible/<ver>/libexec/bin/python -m pip install python-tss-sdk
+```
+
+> **macOS:** the fetch task can die with *"A worker was found in a dead state"* —
+> a Python fork-safety quirk, not a playbook bug. The
+> [`retrieve-secret.sh`](ansible/retrieve-secret.sh) wrapper sets the needed
+> environment (`OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` and `no_proxy='*'`)
+> before invoking `ansible-playbook`, so prefer it on macOS. To run
+> `ansible-playbook` directly, export those two variables first.
+
+- A Secret Server secret with the AWS credentials under slugs `access-key` and
+  `secret-key`.
+- **Either** an OAuth bearer token with View access, **or** an application
+  account username/password — both supplied out of band.
+
+### Required variables
+
+Pass everything at runtime (via `-e` or the environment) so no secret is
+committed. Only the auth pair is mandatory.
+
+| Variable | Env var | Required | Description |
+|---|---|---|---|
+| `tss_server_url` | `TSS_SERVER_URL` | ✅ | Secret Server base URL. Cloud: `https://<tenant>.secretservercloud.com`; on-prem: `https://<host>/SecretServer`. |
+| `tss_secret_id` | `TSS_SECRET_ID` | ✅ | ID of the secret holding the AWS credentials. |
+| `tss_token` | `TSS_TOKEN` | ✅¹ | OAuth bearer token. Sensitive — supplied out of band. |
+| `tss_username` | `TSS_USERNAME` | ✅¹ | Application account username. |
+| `tss_password` | `TSS_PASSWORD` | ✅¹ | Application account password. Sensitive. |
+
+¹ Supply **either** `tss_token` **or** both `tss_username` and `tss_password`.
+
+### Run
+
+```bash
+cd ansible
+
+# Token auth (matches use-cases #1 and #3). The wrapper handles the macOS
+# fork-safety env; args after it are forwarded to ansible-playbook.
+export TSS_TOKEN="<out-of-band bearer token>"
+./retrieve-secret.sh \
+  -e tss_server_url="https://<tenant>.secretservercloud.com" \
+  -e tss_secret_id=75
+
+# Or username/password auth:
+./retrieve-secret.sh \
+  -e tss_server_url="https://<tenant>.secretservercloud.com" \
+  -e tss_secret_id=75 \
+  -e tss_username=app_account -e tss_password='<password>'
+```
+
+---
+
 ## Repo layout
 
 ```
 terraform/     provisions the demo EC2 target; fetches AWS creds via the tss provider (use-case 1)
-ansible/       installs NGINX on the provisioned instance (supporting)
+ansible/       playbook.yml installs NGINX on the provisioned instance (supporting)
+               retrieve-secret.yml fetches a secret via the community.general.tss lookup (use-case 4)
+               retrieve-secret.sh wrapper that sets the macOS fork-safety env, then runs the playbook
 aws-validate.sh   API-based retrieval in BASH (use-case 3)
 .github/workflows/   GitHub Actions retrieval pipeline (use-case 2)
 ```
