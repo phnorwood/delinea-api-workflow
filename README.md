@@ -3,9 +3,7 @@
 A demonstration of retrieving secrets from **Delinea Secret Server** at runtime,
 shown three different ways. Everything else in this repo is supporting scaffolding that exists only to give the secret retrieval something real to do e.g. provision AWS EC2 instances using credentials that are never written to disk or source control.
 
-The subject of the project is **secret retrieval**, not deployment.
-
-**MUST HAVE:** These use-cases assume you are retrieving (and using) an AWS IAM credential to manage AWS EC2 instances. This credential must have the appropriate permissions to perform actions against AWS EC2 instances to complete these tasks, and be stored in Delinea.
+The subject of the project is **secret retrieval**, not deployment. **However** these use-cases do assume you are using an AWS IAM credential to manage AWS EC2 instances. This credential must have the appropriate permissions to perform actions against AWS EC2 instances to complete these tasks.
 
 ## Demo Use Cases
 
