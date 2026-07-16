@@ -5,6 +5,8 @@ shown three different ways. Everything else in this repo is supporting scaffoldi
 
 The subject of the project is **secret retrieval**, not deployment.
 
+**PRE-REQUISITES:*** These use-cases assume you are retrieving (and using) an AWS IAM credential to query and otherwise engage (via TF, ANS) with AWS EC2 instances. This credential must have the appropriate permissions to perform actions against AWS EC2 instances to complete these tasks.
+
 ## Demo Use Cases
 
 | # | Method | How it authenticates to Secret Server | Where secrets are used |
