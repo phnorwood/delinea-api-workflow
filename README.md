@@ -5,7 +5,12 @@ shown three different ways. Everything else in this repo is supporting scaffoldi
 
 The subject of the project is **secret retrieval**, not deployment.
 
-**PRE-REQUISITES:*** These use-cases assume you are retrieving (and using) an AWS IAM credential to query and otherwise engage (via TF, ANS) with AWS EC2 instances. This credential must have the appropriate permissions to perform actions against AWS EC2 instances to complete these tasks.
+**PRE-REQUISITES:*** These use-cases assume you are retrieving (and using) an AWS IAM credential to query and otherwise engage (via TF, AWS CLI) with AWS EC2 instances. This credential must have the appropriate permissions to perform actions against AWS EC2 instances to complete these tasks.
+
+i.e. 
+
+[tss_secret_id] is referenced in terraform.tf.vars.example
+[SECRET_ID] is referenced in aws-validate.sh
 
 ## Demo Use Cases
 
