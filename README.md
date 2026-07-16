@@ -5,20 +5,15 @@ shown three different ways. Everything else in this repo is supporting scaffoldi
 
 The subject of the project is **secret retrieval**, not deployment.
 
-**PRE-REQUISITES:*** These use-cases assume you are retrieving (and using) an AWS IAM credential to query and otherwise engage (via TF, AWS CLI) with AWS EC2 instances. This credential must have the appropriate permissions to perform actions against AWS EC2 instances to complete these tasks.
-
-i.e. 
-
-[tss_secret_id] is referenced in terraform.tf.vars.example
-[SECRET_ID] is referenced in aws-validate.sh
+`**PRE-REQUISITES:*** These use-cases assume you are retrieving (and using) an AWS IAM credential to manage AWS EC2 instances. This credential must have the appropriate permissions to perform actions against AWS EC2 instances to complete these tasks, and be stored in Delinea.`
 
 ## Demo Use Cases
 
 | # | Method | How it authenticates to Secret Server | Where secrets are used |
 |---|---|---|---|
-| 1 | [Terraform TSS provider](#use-case-1--terraform-tss-provider) | OAuth **bearer token** (`TF_VAR_tss_token`) | Provisioning AWS resources at `terraform apply` |
-| 2 | [GitHub Actions](#use-case-2--github-actions) | **Client credentials** (client ID + secret) | Inside a CI pipeline on push |
-| 3 | [aws-validate.sh](#use-case-3--aws-validatesh) | OAuth **bearer token** (`BEARER_TOKEN`) | A shell script calling the Secret Server API directly |
+| 1 | [Terraform TSS provider](#use-case-1-via-terraform-provider) | OAuth **bearer token** (`TF_VAR_tss_token`) | Provisioning AWS resources at `terraform apply` |
+| 2 | [GitHub Actions](#use-case-2-via-github-actions) | **Client credentials** (client ID + secret) | Inside a CI pipeline on push |
+| 3 | [aws-validate.sh](#use-case-3-via-api) | OAuth **bearer token** (`BEARER_TOKEN`) | A shell script calling the Secret Server API directly |
 
 In every case the secret is a Secret Server secret whose template exposes two
 fields (slugs `access-key` and `secret-key`) holding an AWS access key and secret
@@ -169,7 +164,7 @@ All are environment variables; only `BEARER_TOKEN` is mandatory.
 |---|---|---|---|
 | `BEARER_TOKEN` | ✅ | — | OAuth bearer token for API authentication. |
 | `SECRET_SERVER_URL` | ➖ | `https://<tenant>.secretservercloud.com` | Secret Server base URL (no trailing slash). |
-| `SECRET_ID` | ➖ | example default | Numeric ID of the secret to retrieve. |
+| `SECRET_ID` | ➖ | example default | Numeric ID of the secret holding the AWS credentials. |
 | `AWS_REGION` | ➖ | `us-east-1` | Region written to the AWS CLI config. |
 
 The script expects the credential fields under the slugs `access-key` and
